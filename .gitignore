@@ -29,3 +29,8 @@ coverage.out
 
 # Herramientas locales
 .atl/
+
+# Credenciales y estado local por proyecto
+.vercel-auth/
+.vercel/
+

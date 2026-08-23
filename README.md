@@ -397,6 +397,32 @@ Contexto completo en [12 · Riesgos y preguntas abiertas](docs/12-riesgos-y-preg
 
 ---
 
+## Configuración local
+
+El repo usa [direnv](https://direnv.net) para acotar las credenciales a esta carpeta: adentro
+trabajás con las cuentas del proyecto, afuera seguís con las tuyas.
+
+```bash
+direnv allow            # carga .envrc al entrar a la carpeta
+gh auth login --web     # cuenta de GitHub del proyecto
+vercel login            # cuenta de Vercel del proyecto
+```
+
+| Herramienta | Cómo se acota | Dónde vive la sesión |
+|---|---|---|
+| **git** | `git config --local` | `.git/config` — identidad de commits |
+| **gh** | `GH_TOKEN` en `.envrc`, leído del keyring en cada entrada | Keyring del sistema |
+| **vercel** | `.bin/vercel`, wrapper que fuerza `--global-config` | `.vercel-auth/` (gitignoreado) |
+
+Vercel lleva wrapper en vez de una variable de entorno porque su token de sesión dura unas 8
+horas y el CLI lo refresca solo: una copia exportada al entorno quedaría vencida el mismo día.
+`--global-config` le da un almacén propio y el CLI se encarga del refresco ahí adentro.
+
+Para CI la historia es otra: ahí va un token de larga duración en `VERCEL_TOKEN` como secreto
+del repositorio.
+
+---
+
 ## Estructura
 
 ```
@@ -406,7 +432,8 @@ crm-potenciado/
 │   └── adr/                 registros de decisión
 ├── backend/                 ⚙️  Go · hexagonal          (fase 0)
 ├── frontend/                🖥️  Next.js 16              (fase 1)
-└── deploy/                  🐳 compose · Caddy          (fase 0)
+├── deploy/                  🐳 compose · Caddy          (fase 0)
+└── .bin/                    🔧 wrappers de CLI del proyecto
 ```
 
 ---

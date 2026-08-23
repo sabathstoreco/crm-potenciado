@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Wrapper de Vercel CLI acotado a este proyecto.
+#
+# Vercel guarda la sesión en un único directorio global
+# (~/.local/share/com.vercel.cli), igual que gh usa el keyring del sistema.
+# La bandera -Q/--global-config permite apuntar a otro directorio, pero no
+# tiene variable de entorno equivalente — de ahí este wrapper.
+#
+# direnv antepone .bin/ al PATH al entrar a la carpeta, así que `vercel`
+# resuelve acá y siempre usa .vercel-auth/ en lugar del almacén global.
+#
+# No se exporta VERCEL_TOKEN: el token de sesión dura ~8 h y el CLI lo
+# refresca solo dentro de este directorio. Una copia en el entorno quedaría
+# vencida el mismo día.
+set -euo pipefail
+
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+root="$(dirname "$here")"
+
+# Resolver el vercel real excluyendo este directorio, para no llamarse a sí mismo.
+real="$(PATH="$(printf '%s' "$PATH" | tr ':' '\n' | grep -vxF "$here" | paste -sd: -)" \
+        command -v vercel || true)"
+
+if [ -z "$real" ]; then
+  echo "vercel no está instalado. Instalalo con: bun add -g vercel" >&2
+  exit 127
+fi
+
+exec "$real" --global-config "$root/.vercel-auth" "$@"
