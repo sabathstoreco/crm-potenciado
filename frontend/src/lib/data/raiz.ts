@@ -11,6 +11,13 @@ import type { TenantDataset } from '@/lib/types';
  *   612 × $97 = $59,364 revenue · ROAS 6.6x
  */
 export const raiz: TenantDataset = {
+  members: [
+    { name: 'Tomás Vidal', email: 'tomas@raiz.demo', role: 'owner', roleLabel: 'Owner', lastSeen: 'hace 4 h', mfa: false },
+    { name: 'Yamil', email: 'admin@yamilos.demo', role: 'manager', roleLabel: 'Manager', lastSeen: 'ahora', mfa: true },
+    { name: 'Edu Paz', email: 'edu@raiz.demo', role: 'editor', roleLabel: 'Editor', lastSeen: 'hace 30 min', mfa: false },
+    { name: 'Nadia Cruz', email: 'nadia@raiz.demo', role: 'editor', roleLabel: 'Editor', lastSeen: 'hace 1 h', mfa: false },
+    { name: 'Soporte', email: 'soporte@raiz.demo', role: 'community_manager', roleLabel: 'Community manager', lastSeen: 'hace 6 min', mfa: false },
+  ],
   content: {
     kpis: [
       { label: 'Piezas publicadas', value: '246', hint: 'en 4 cuentas' },

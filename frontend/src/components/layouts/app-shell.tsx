@@ -6,23 +6,21 @@ import {
   CalendarDays,
   ChevronDown,
   Check,
-  Database,
   Film,
   KanbanSquare,
   LogOut,
   Menu,
   MessageCircleQuestion,
   Phone,
-  Route,
-  Sun,
-  Moon,
+  Settings,
   UsersRound,
   X,
 } from 'lucide-react';
 import { AdsScreen, CallsScreen } from '@/components/screens/money';
 import { CalendarScreen, ContentScreen } from '@/components/screens/content';
 import { LeadsScreen, PipelineScreen } from '@/components/screens/crm';
-import { AssistantScreen, DataScreen, ProcessScreen, TeamScreen } from '@/components/screens/ops';
+import { AssistantScreen, TeamScreen } from '@/components/screens/ops';
+import { SettingsModal, type ThemeMode } from '@/components/system/settings-modal';
 import { getDataset, getTenant, tenants } from '@/lib/data';
 import { onTenantColor } from '@/lib/format';
 import { writeSession } from '@/lib/auth';
@@ -37,8 +35,6 @@ const NAV = [
   { id: 'calls', label: 'Llamadas', icon: Phone },
   { id: 'team', label: 'Equipo y SOPs', icon: UsersRound },
   { id: 'assistant', label: 'Preguntar', icon: MessageCircleQuestion },
-  { id: 'process', label: 'El proceso', icon: Route },
-  { id: 'data', label: 'Datos', icon: Database },
 ] as const;
 
 type ScreenId = (typeof NAV)[number]['id'];
@@ -80,7 +76,8 @@ export function AppShell({
   const [period, setPeriod] = useState<Period>('90d');
   const [navOpen, setNavOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [light, setLight] = useState(false);
+  const [theme, setTheme] = useState<ThemeMode>('dark');
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const tenant = useMemo(() => getTenant(session.activeTenantId), [session.activeTenantId]);
   const data = useMemo(() => getDataset(session.activeTenantId), [session.activeTenantId]);
@@ -98,10 +95,14 @@ export function AppShell({
     setNavOpen(false);
   }
 
-  function toggleTheme() {
-    const next = !light;
-    setLight(next);
-    document.documentElement.classList.toggle('light', next);
+  // 'system' sigue la preferencia del navegador; los otros dos la pisan.
+  function applyTheme(next: ThemeMode) {
+    setTheme(next);
+    const prefersLight =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-color-scheme: light)').matches;
+    const useLight = next === 'light' || (next === 'system' && prefersLight);
+    document.documentElement.classList.toggle('light', useLight);
   }
 
   // Las llamadas no aplican a todos los embudos: el ítem se marca en vez de ocultarse,
@@ -120,8 +121,6 @@ export function AppShell({
     calls: <CallsScreen data={data.calls} tenant={tenant} />,
     team: <TeamScreen data={data.team} />,
     assistant: <AssistantScreen data={data.assistant} tenant={tenant} />,
-    process: <ProcessScreen data={data.process} />,
-    data: <DataScreen data={data.data} />,
   };
 
   return (
@@ -162,11 +161,10 @@ export function AppShell({
           <div className="flex flex-col gap-0.5 border-t border-border p-2">
             <button
               type="button"
-              onClick={toggleTheme}
+              onClick={() => setSettingsOpen(true)}
               className="flex min-h-[36px] cursor-pointer items-center gap-2.5 rounded-md px-3 text-[13px] text-fg-secondary transition-colors hover:bg-raised hover:text-foreground"
             >
-              {light ? <Moon size={15} aria-hidden /> : <Sun size={15} aria-hidden />}
-              {light ? 'Modo oscuro' : 'Modo claro'}
+              <Settings size={15} aria-hidden /> Configuración
             </button>
             <button
               type="button"
@@ -207,8 +205,9 @@ export function AppShell({
               </span>
             </div>
 
+            <div className="flex shrink-0 items-center gap-2">
             <div
-              className="flex shrink-0 items-center rounded-md border border-border p-0.5"
+              className="flex items-center rounded-md border border-border p-0.5"
               role="group"
               aria-label="Periodo"
             >
@@ -227,6 +226,15 @@ export function AppShell({
                   {p.label}
                 </button>
               ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(true)}
+              aria-label="Abrir configuración"
+              className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-md text-fg-muted transition-colors hover:bg-surface hover:text-foreground"
+            >
+              <Settings size={16} aria-hidden />
+            </button>
             </div>
           </header>
 
@@ -288,16 +296,28 @@ export function AppShell({
             <div className="border-t border-border p-2">
               <button
                 type="button"
-                onClick={toggleTheme}
+                onClick={() => {
+                  setSettingsOpen(true);
+                  setNavOpen(false);
+                }}
                 className="flex min-h-[44px] w-full cursor-pointer items-center gap-2.5 rounded-md px-3 text-[13px] text-fg-secondary hover:bg-raised"
               >
-                {light ? <Moon size={15} aria-hidden /> : <Sun size={15} aria-hidden />}
-                {light ? 'Modo oscuro' : 'Modo claro'}
+                <Settings size={15} aria-hidden /> Configuración
               </button>
             </div>
           </div>
         </div>
       ) : null}
+
+      <SettingsModal
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        tenant={tenant}
+        data={data}
+        session={session}
+        theme={theme}
+        onTheme={applyTheme}
+      />
     </div>
   );
 }

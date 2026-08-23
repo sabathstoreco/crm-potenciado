@@ -9,6 +9,14 @@ import type { TenantDataset } from '@/lib/types';
  *   Σ ventas por ángulo = 77 atribuidas (de 111 totales; el resto sin atribuir)
  */
 export const vyma: TenantDataset = {
+  members: [
+    { name: 'Mariana Soto', email: 'mariana@vyma.demo', role: 'owner', roleLabel: 'Owner', lastSeen: 'hace 12 min', mfa: true },
+    { name: 'Yamil', email: 'admin@yamilos.demo', role: 'manager', roleLabel: 'Manager', lastSeen: 'ahora', mfa: true },
+    { name: 'Bruno Iriarte', email: 'bruno@vyma.demo', role: 'editor', roleLabel: 'Editor', lastSeen: 'hace 3 h', mfa: false },
+    { name: 'Lucía Ferrer', email: 'lucia@vyma.demo', role: 'community_manager', roleLabel: 'Community manager', lastSeen: 'hace 1 h', mfa: false },
+    { name: 'Closer 1', email: 'closer1@vyma.demo', role: 'closer', roleLabel: 'Closer', lastSeen: 'hace 40 min', mfa: false },
+    { name: 'Closer 2', email: 'closer2@vyma.demo', role: 'closer', roleLabel: 'Closer', lastSeen: 'ayer', mfa: false },
+  ],
   content: {
     kpis: [
       { label: 'Piezas publicadas', value: '182', hint: 'en 5 cuentas' },

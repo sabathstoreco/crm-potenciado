@@ -235,9 +235,21 @@ export type DataLayer = {
 
 export type AssistantData = { placeholder: string; suggestions: string[]; note: string };
 
+/* ── Miembros de la cuenta (sección Equipo del modal) ──────── */
+
+export type Member = {
+  name: string;
+  email: string;
+  role: AccountRole;
+  roleLabel: string;
+  lastSeen: string;
+  mfa: boolean;
+};
+
 /* ── El paquete completo por tenant ────────────────────────── */
 
 export type TenantDataset = {
+  members: Member[];
   content: ContentData;
   calendar: CalendarData;
   pipeline: PipelineData;

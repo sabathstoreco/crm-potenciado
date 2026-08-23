@@ -8,6 +8,12 @@ import type { TenantDataset } from '@/lib/types';
  *   $14,300 / 44 = $325 CAC · 44 × $5,800 = $255,200 revenue
  */
 export const vive: TenantDataset = {
+  members: [
+    { name: 'Diego Álvarez', email: 'diego@vive.demo', role: 'owner', roleLabel: 'Owner', lastSeen: 'hace 25 min', mfa: true },
+    { name: 'Yamil', email: 'admin@yamilos.demo', role: 'manager', roleLabel: 'Manager', lastSeen: 'ahora', mfa: true },
+    { name: 'Sofía Rivas', email: 'sofia@vive.demo', role: 'editor', roleLabel: 'Editor', lastSeen: 'hace 2 h', mfa: false },
+    { name: 'Recepción', email: 'recepcion@vive.demo', role: 'setter', roleLabel: 'Setter', lastSeen: 'hace 8 min', mfa: false },
+  ],
   content: {
     kpis: [
       { label: 'Piezas publicadas', value: '94', hint: 'en 3 cuentas' },
