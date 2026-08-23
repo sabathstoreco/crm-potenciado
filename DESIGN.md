@@ -284,10 +284,13 @@ Escala densa (base 4px), calibrada para dashboard.
 
 | Breakpoint | Ancho | Layout |
 |---|---|---|
-| `sm` | 375px | 1 columna, nav inferior, cards apiladas |
-| `md` | 768px | 2 columnas, sidebar colapsable |
-| `lg` | 1024px | 3 columnas, sidebar fija 240px |
-| `xl` | 1440px | 4 columnas, contenido máx 1440px centrado |
+| *(base)* | 375–767px | 1 columna, nav inferior, cards apiladas |
+| `md` | ≥ 768px | 2 columnas, sidebar colapsable |
+| `lg` | ≥ 1024px | 3 columnas, sidebar fija 240px |
+| `xl` | ≥ 1440px | 4 columnas, contenido máx 1440px centrado |
+
+El estilo base **es** el del teléfono y no tiene nombre: los breakpoints solo agregan.
+Nunca `max-width` en media queries. Comportamiento completo en [UX.md](UX.md).
 
 Sidebar: 240px expandida, 64px colapsada (solo íconos con tooltip).
 
@@ -365,6 +368,16 @@ disabled   fondo bg · texto fg-disabled · cursor not-allowed
 
 Etiqueta **siempre visible arriba** del campo. Nunca placeholder como etiqueta: desaparece al
 escribir y deja al usuario sin contexto.
+
+> [!CAUTION]
+> **Los inputs van a 16px en móvil**, no a los 14px del texto base. Safari en iOS hace zoom
+> automático al enfocar un campo con `font-size` menor a 16px, y la pantalla salta en cada
+> toque. Es una excepción explícita a la escala tipográfica de §4.3.
+>
+> ```css
+> input, select, textarea { font-size: 16px; }
+> @media (min-width: 1024px) { input, select, textarea { font-size: 14px; } }
+> ```
 
 ### Cards
 

@@ -12,7 +12,7 @@ y responde la pregunta que ninguna herramienta suelta puede responder:
 
 ![Estado](https://img.shields.io/badge/estado-planeaci%C3%B3n-blue?style=for-the-badge)
 ![Fase](https://img.shields.io/badge/fase-0%20%C2%B7%20cimientos-lightgrey?style=for-the-badge)
-![Docs](https://img.shields.io/badge/docs-14%20documentos-success?style=for-the-badge)
+![Docs](https://img.shields.io/badge/docs-15%20documentos-success?style=for-the-badge)
 
 <br>
 
@@ -259,6 +259,7 @@ Las fases **3 y 4 son el camino crítico**: son las que entregan la promesa del 
 <tr><td>11</td><td><a href="docs/11-no-funcionales.md">No funcionales</a></td><td>Seguridad, performance, backups, deploy</td></tr>
 <tr><td>12</td><td><a href="docs/12-riesgos-y-preguntas-abiertas.md">Riesgos</a></td><td>5 bloqueantes · 8 riesgos</td></tr>
 <tr><td>🎨</td><td><a href="DESIGN.md">Sistema de diseño</a></td><td>Color, tipografía, componentes — con contrastes verificados</td></tr>
+<tr><td>📱</td><td><a href="UX.md">UI/UX responsive</a></td><td>Mobile-first: quién trabaja en qué pantalla y cómo se transforma cada vista</td></tr>
 </table>
 
 Las decisiones de arquitectura se registran en [`docs/adr/`](docs/adr/).
