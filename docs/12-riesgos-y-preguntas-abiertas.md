@@ -208,7 +208,7 @@ Registro rápido; los ADRs completos van en [adr/](adr/).
 
 | # | Pregunta | Necesaria para |
 |---|---|---|
-| O1 | ¿Se necesita marca blanca por cliente (logo, colores)? | Fase 1 UI |
+| ~~O1~~ | ~~¿Se necesita marca blanca por cliente?~~ ✅ **Resuelto**: Yamil OS es la marca del software; el tenant aporta logo y color como capa superpuesta, usada solo como fondo ([DESIGN.md §13](../DESIGN.md#13--branding-de-tenant)) | — |
 | O2 | ¿Proveedor de SMS para recordatorios en México? | Fase 4 |
 | O3 | ¿Hace falta app móvil, o alcanza con web responsive? | Después del MVP |
 | O4 | ¿Los clientes necesitan exportar reportes a PDF? | Fase 4 |

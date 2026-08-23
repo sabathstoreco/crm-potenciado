@@ -1,6 +1,6 @@
 <div align="center">
 
-# CRM Potenciado
+# Yamil OS
 
 **Una capa central de información para negocios liderados por contenido.**
 
@@ -12,7 +12,7 @@ y responde la pregunta que ninguna herramienta suelta puede responder:
 
 ![Estado](https://img.shields.io/badge/estado-planeaci%C3%B3n-blue?style=for-the-badge)
 ![Fase](https://img.shields.io/badge/fase-0%20%C2%B7%20cimientos-lightgrey?style=for-the-badge)
-![Docs](https://img.shields.io/badge/docs-13%20documentos-success?style=for-the-badge)
+![Docs](https://img.shields.io/badge/docs-14%20documentos-success?style=for-the-badge)
 
 <br>
 
@@ -76,7 +76,7 @@ flowchart TB
         ADS["💰 Ads APIs"]
     end
 
-    subgraph CORE["CRM Potenciado · dueño de los datos"]
+    subgraph CORE["Yamil OS · dueño de los datos"]
         direction TB
         API["⚙️ API · Go + Gin<br/><sub>hexagonal</sub>"]
         WRK["🔄 Worker<br/><sub>jobs · rollups · sync</sub>"]
@@ -258,6 +258,7 @@ Las fases **3 y 4 son el camino crítico**: son las que entregan la promesa del 
 <tr><td>10</td><td><a href="docs/10-migracion-de-datos.md">Migración</a></td><td>Notion, Sheets y GHL sin perder datos</td></tr>
 <tr><td>11</td><td><a href="docs/11-no-funcionales.md">No funcionales</a></td><td>Seguridad, performance, backups, deploy</td></tr>
 <tr><td>12</td><td><a href="docs/12-riesgos-y-preguntas-abiertas.md">Riesgos</a></td><td>5 bloqueantes · 8 riesgos</td></tr>
+<tr><td>🎨</td><td><a href="DESIGN.md">Sistema de diseño</a></td><td>Color, tipografía, componentes — con contrastes verificados</td></tr>
 </table>
 
 Las decisiones de arquitectura se registran en [`docs/adr/`](docs/adr/).
@@ -344,7 +345,7 @@ Cada descarte es reversible con un [ADR](docs/adr/) que explique qué falló.
 flowchart LR
     A["📱 Instagram<br/>comentario"] -->|ManyChat<br/><sub>se queda</sub>| B["💬 DM automático"]
     B --> C["🧲 Lead magnet"]
-    C ==>|webhook| D["🎯 CRM Potenciado<br/><sub>acá empieza lo nuestro</sub>"]
+    C ==>|webhook| D["🎯 Yamil OS<br/><sub>acá empieza lo nuestro</sub>"]
     D --> E["📞 Llamada"]
     E --> F["💰 Venta"]
 

@@ -29,7 +29,8 @@ CREATE TABLE users (
   password_hash  text,                       -- NULL si es solo SSO
   full_name      text NOT NULL,
   avatar_url     text,
-  is_platform_admin boolean NOT NULL DEFAULT false,   -- staff de la agencia
+  platform_role  text NOT NULL DEFAULT 'none'
+                 CHECK (platform_role IN ('none','admin','dev','admin_dev')),
   last_login_at  timestamptz,
   created_at     timestamptz NOT NULL DEFAULT now(),
   updated_at     timestamptz NOT NULL DEFAULT now(),
@@ -51,6 +52,37 @@ CREATE TABLE accounts (                      -- un cliente = un tenant
   updated_at   timestamptz NOT NULL DEFAULT now(),
   deleted_at   timestamptz
 );
+
+CREATE TABLE account_branding (            -- lo que el cliente carga en onboarding
+  account_id     uuid PRIMARY KEY REFERENCES accounts(id) ON DELETE CASCADE,
+  brand_color    text NOT NULL DEFAULT '#DB0F2A'
+                 CHECK (brand_color ~ '^#[0-9A-Fa-f]{6}$'),
+  logo_light_url text,                       -- SVG o PNG transparente, fondos claros
+  logo_dark_url  text,                       -- SVG o PNG transparente, fondos oscuros
+  logo_mark_url  text,                       -- cuadrado 1:1, avatar y favicon
+  updated_by     uuid REFERENCES users(id),
+  updated_at     timestamptz NOT NULL DEFAULT now()
+);
+-- El color se guarda EXACTO como lo eligió el cliente. Nunca se deriva ni se corrige
+-- en base de datos: se usa solo como fondo y el texto encima se calcula por luminancia.
+-- Ver DESIGN.md §13.
+
+CREATE TABLE impersonation_sessions (
+  id             uuid PRIMARY KEY,
+  actor_user_id  uuid NOT NULL REFERENCES users(id),   -- quién impersona
+  target_user_id uuid NOT NULL REFERENCES users(id),   -- a quién
+  account_id     uuid NOT NULL REFERENCES accounts(id),
+  reason         text NOT NULL,                        -- obligatorio, no puede ir vacío
+  write_enabled  boolean NOT NULL DEFAULT false,
+  started_at     timestamptz NOT NULL DEFAULT now(),
+  expires_at     timestamptz NOT NULL,                 -- máximo 30 minutos
+  ended_at       timestamptz,
+  owner_notified_at timestamptz,
+  CONSTRAINT reason_not_blank CHECK (length(btrim(reason)) > 0),
+  CONSTRAINT max_30_min CHECK (expires_at <= started_at + interval '30 minutes')
+);
+CREATE INDEX ON impersonation_sessions (account_id, started_at DESC);
+CREATE INDEX ON impersonation_sessions (actor_user_id, started_at DESC);
 
 CREATE TABLE account_memberships (
   id          uuid PRIMARY KEY,
@@ -81,7 +113,8 @@ CREATE TABLE refresh_tokens (
 CREATE TABLE audit_log (
   id          uuid PRIMARY KEY,
   account_id  uuid,
-  actor_id    uuid REFERENCES users(id),
+  actor_id    uuid REFERENCES users(id),          -- el usuario REAL que ejecutó
+  impersonated_user_id uuid REFERENCES users(id), -- no NULL si fue vía impersonación
   action      text NOT NULL,                 -- 'deal.updated', 'member.role_changed'
   entity_type text NOT NULL,
   entity_id   uuid,

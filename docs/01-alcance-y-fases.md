@@ -31,10 +31,17 @@ pudra al tercer mes.
 
 **Construir**
 - `accounts` (tenants), `users`, `account_memberships` con roles.
-- Auth: email + contraseña, JWT de acceso + refresh token con rotación.
+- **Roles de plataforma `admin` y `dev`** con sus permisos separados ([06](06-multitenancy-auth-rbac.md#roles-de-plataforma)).
+- Auth: email + contraseña, JWT de acceso + refresh token con rotación. MFA obligatorio para
+  todo actor de plataforma.
 - Middleware de RBAC y la matriz de permisos de [06](06-multitenancy-auth-rbac.md).
 - RLS de Postgres habilitado en todas las tablas con tenant.
-- Consola de admin: crear cuenta, invitar usuario, asignar rol.
+- Consola de plataforma: crear, editar, suspender y archivar tenants; invitar usuarios;
+  asignar roles.
+- **Impersonación auditada** con motivo obligatorio, expiración de 30 min, franja visible y
+  notificación al owner.
+- **Branding de tenant**: carga de logo (claro / oscuro / marca) y color, con vista previa en
+  vivo en ambos modos ([DESIGN.md §13](../DESIGN.md#13--branding-de-tenant)).
 - Onboarding: thank-you page, agendamiento con la **regla de mínimo 2 días**, formulario de
   onboarding (negocio / posicionamiento / marketing / equipo / objetivos) guardado como
   submission versionada.
@@ -48,6 +55,9 @@ pudra al tercer mes.
   entrar y leer su estrategia — sin que nadie corra SQL a mano.
 - Un test automatizado prueba que la cuenta A no puede leer datos de la cuenta B por ningún
   endpoint.
+- Un `dev` no puede tocar facturación ni estrategia; un `admin` no puede leer payloads crudos
+  de webhook. Ambas restricciones cubiertas por test.
+- Toda sesión de impersonación deja rastro en `audit_log` con el actor real y el impersonado.
 
 ---
 

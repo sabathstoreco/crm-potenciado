@@ -634,16 +634,151 @@ el patrón inverso (`:root` claro, `.dark` oscuro) el usuario ve un flash blanco
 
 ---
 
-## 13 · Pendientes
+## 13 · Branding de tenant
 
-| # | Pregunta | Necesario para |
+**Yamil OS es la marca del software.** Cada cliente carga su logo y su color en el onboarding,
+y esa identidad se superpone a la de Yamil OS — no la reemplaza.
+
+### 13.1 · Qué es de Yamil OS y qué es del tenant
+
+| Zona | Marca | Por qué |
 |---|---|---|
-| D1 | ¿Hay logotipo de Yamil OS, o hay que diseñarlo? | Header, favicon, login |
-| D2 | ¿Marca blanca por cliente (su logo y color) o marca Yamil OS única? | Arquitectura de tokens |
-| D3 | ¿Se necesita densidad "cómoda" además de la compacta, como toggle? | Escala de espaciado |
-| D4 | ¿Hay identidad de marca previa —tipografías, imaginería— a respetar? | Consistencia |
+| Login, sidebar, topbar | **Yamil OS** | Es el producto. Un admin que salta entre cuentas necesita un chrome estable. |
+| Botón primario, foco, error | **Yamil OS** | Semántica de interacción. Si cambiara por cuenta, "confirmar" se vería distinto en cada tenant. |
+| Franja de identidad de cuenta | **Tenant** | Señal permanente de en qué cuenta estás parado. |
+| Avatar / marca de la cuenta | **Tenant** | Su logo, en el selector y el header. |
+| Reportes y exports | **Tenant** | Es lo que el cliente le muestra a *sus* clientes. Acá su marca manda. |
+| Gráficos y series | **Ninguna** | Paleta categórica del sistema. Ver §3. |
 
-**D2 es el que más impacta.** Si cada cliente lleva su propio color primario, el token
-`brand` pasa a ser dinámico por cuenta y **todos los pares de contraste hay que recalcularlos
-en runtime**. Es una diferencia arquitectónica grande y conviene resolverla antes de escribir
-el primer componente.
+> [!IMPORTANT]
+> El color del tenant **no re-tematiza la aplicación**. Es una banda de identidad, no un tema.
+>
+> Si cada cuenta recoloreara toda la UI, un admin de la agencia que pasa de la cuenta A a la B
+> tendría que reaprender qué botón es cuál. Peor: el rojo de "borrar" en una cuenta podría ser
+> el verde de "confirmar" en otra. Eso no es personalización, es una trampa.
+>
+> Al mismo tiempo, la franja de color **sí** resuelve el error más caro del multi-tenant:
+> editar los datos del cliente equivocado. Un borde de color persistente y un logo visible
+> hacen que sea imposible confundirse.
+
+### 13.2 · La regla que elimina la derivación
+
+El color del tenant se usa **solo como fondo**, nunca como texto ni como borde sobre
+superficies del sistema.
+
+Eso no es una limitación arbitraria — es lo que preserva su marca intacta:
+
+```
+Para CUALQUIER color, siempre existe blanco o negro encima que supera 4.58:1.
+
+  Umbral:  L > 0.1791  →  texto negro
+           L ≤ 0.1791  →  texto blanco
+
+  En el punto exacto de cruce ambas opciones dan 4.58:1, por encima del 4.5 de AA.
+```
+
+Verificado sobre 12 colores hostiles (amarillo neón, rosa pastel, blanco puro, negro puro,
+cian, magenta…). **Peor caso: 5.10:1.** Siempre cumple.
+
+| Color del cliente | Texto automático | Ratio |
+|---|---|---:|
+| `#FFEE00` amarillo neón | `#000000` | 17.48:1 |
+| `#FFD1DC` rosa pastel | `#000000` | 15.41:1 |
+| `#FFFFFF` blanco puro | `#000000` | 21.00:1 |
+| `#000000` negro puro | `#FFFFFF` | 21.00:1 |
+| `#808080` gris medio | `#000000` | 5.32:1 |
+| `#FF00FF` magenta | `#000000` | 6.70:1 |
+
+```ts
+// Una función, cero configuración, siempre accesible.
+export function onTenantColor(hex: string): "#000000" | "#FFFFFF" {
+  return relativeLuminance(hex) > 0.1791 ? "#000000" : "#FFFFFF";
+}
+```
+
+### 13.3 · Por qué NO derivamos el color del tenant
+
+La alternativa —aclarar u oscurecer su color hasta que cumpla como texto— destruye la marca:
+
+| Color del cliente | Derivado para modo claro | Resultado |
+|---|---|---|
+| `#FFEE00` amarillo neón | `#7A7200` | Un oliva apagado. **No es su color.** |
+| `#FFFFFF` blanco | `#707070` | Gris. Su marca desapareció. |
+| `#FFD1DC` rosa pastel | `#826B70` | Marrón grisáceo. Irreconocible. |
+
+Un cliente que ve su amarillo neón convertido en oliva abre un ticket de soporte, y tiene
+razón. **Usar su color solo como fondo evita el problema por completo.**
+
+Si en algún momento hace falta el color del tenant como acento funcional, la derivación queda
+disponible como fallback — pero **se le muestra el resultado en el onboarding y él lo aprueba**.
+Nunca se distorsiona su marca en silencio.
+
+### 13.4 · Tokens
+
+```css
+/* Inyectados en runtime en el wrapper de la cuenta, no en :root */
+[data-tenant] {
+  --tenant-brand:    #1E40AF;   /* exacto, como lo cargó el cliente */
+  --tenant-on-brand: #FFFFFF;   /* calculado por luminancia */
+}
+```
+
+```tsx
+<div
+  data-tenant={account.slug}
+  style={{
+    "--tenant-brand":    account.branding.color,
+    "--tenant-on-brand": onTenantColor(account.branding.color),
+  } as React.CSSProperties}
+>
+```
+
+Los tokens de Yamil OS quedan en `:root` y son inmutables. Los del tenant viven en un scope
+más abajo y no pueden pisarlos.
+
+### 13.5 · Logos
+
+Un solo archivo casi nunca funciona en los dos modos: la mayoría de los clientes sube un PNG
+pensado para fondo blanco, que en modo oscuro desaparece.
+
+| Campo | Requisito | Uso |
+|---|---|---|
+| `logo_light` | SVG o PNG transparente | Sobre superficies claras |
+| `logo_dark` | SVG o PNG transparente | Sobre superficies oscuras |
+| `logo_mark` | Cuadrado 1:1, mín 256px | Avatar, favicon, selector de cuenta |
+
+**Fallback automático:** si el cliente sube un solo logo, se renderiza dentro de un contenedor
+blanco con `radius-md` y `space-2` de padding. Se ve intencional, no roto, y funciona en los
+dos modos sin pedirle un segundo archivo.
+
+Si no sube nada: monograma con las iniciales de la cuenta sobre `--tenant-brand`, con el
+texto calculado por luminancia.
+
+### 13.6 · Onboarding de marca
+
+```
+1. El cliente sube su logo        → se detecta si tiene transparencia
+2. Elige su color                 → color picker + campo hex
+3. Vista previa EN VIVO           → se muestra la franja, el avatar y un
+                                     export de ejemplo, en oscuro y en claro
+4. Confirma
+```
+
+El paso 3 no es opcional. Es donde el cliente ve cómo queda su marca de verdad, en lugar de
+descubrirlo después y pedir cambios.
+
+---
+
+## 14 · Pendientes
+
+| # | Pregunta | Necesario para | Estado |
+|---|---|---|---|
+| D1 | ¿Existe logotipo de Yamil OS, o hay que diseñarlo? | Header, favicon, login | **Abierto** |
+| D2 | ¿Marca blanca por cliente o marca única? | Arquitectura de tokens | ✅ **Resuelto** — ver §13: Yamil OS es el chrome, el tenant aporta logo y color como capa superpuesta |
+| D3 | ¿Densidad "cómoda" además de la compacta, como toggle? | Escala de espaciado | **Abierto** |
+| D4 | ¿Identidad de marca previa de Yamil OS a respetar? | Consistencia | **Abierto** |
+| D5 | ¿El cliente puede elegir el modo claro como su default, o lo fuerza Yamil OS a oscuro? | Preferencia de usuario vs de cuenta | **Abierto** |
+
+**D1 pasa a ser el más urgente.** El sistema de diseño está definido, pero el chrome necesita
+una marca visual concreta —logotipo, monograma, favicon— y hoy no existe. Sin eso, el header
+y la pantalla de login no se pueden terminar.

@@ -41,18 +41,97 @@ B contra el mismo pool chico; verificar que ninguna respuesta contenga datos de 
 
 | Actor | Alcance | Cómo se autentica |
 |---|---|---|
-| **Admin de plataforma** (agencia) | Todas las cuentas | `users.is_platform_admin = true` |
+| **Rol de plataforma** (`admin`, `dev`) | Todas las cuentas | `users.platform_role` |
 | **Miembro de cuenta** | Una o más cuentas, con un rol en cada una | `account_memberships` |
 | **Servicio** (Hermes, workers) | Token de servicio con alcance limitado | Token de máquina, nunca un JWT de usuario |
 
-Un admin de plataforma entra a una cuenta por las mismas rutas; no se le da una UI distinta.
+Un actor de plataforma entra a una cuenta por las mismas rutas; no se le da una UI distinta.
 Eso mantiene un único camino de código de autorización en lugar de dos.
 
 ---
 
-## Roles
+## Roles de plataforma
 
-Siete roles. El brief listaba cinco; se agregan `owner` y `viewer` porque "quién puede borrar
+Dos roles por encima de los tenants: **`admin`** y **`dev`**. Un usuario puede tener uno, los
+dos, o ninguno (`platform_role = 'none'`, que es el default de todo usuario cliente).
+
+```
+users.platform_role  ∈  { none, admin, dev, admin_dev }
+```
+
+### Por qué dos y no uno
+
+Un booleano `is_platform_admin` mezcla dos trabajos distintos que necesitan permisos
+distintos. Separarlos es mínimo privilegio aplicado:
+
+| | `admin` — operación de negocio | `dev` — operación técnica |
+|---|---|---|
+| Quién | Yamil y el equipo de la agencia | Quien mantiene el sistema |
+| Crear / editar / suspender tenants | ✅ | ❌ |
+| Invitar y remover miembros de cualquier cuenta | ✅ | ❌ |
+| Configurar el branding de un tenant | ✅ | ❌ |
+| Editar la estrategia de cualquier cuenta | ✅ | ❌ |
+| Facturación y planes | ✅ | ❌ |
+| Biblioteca global de SOPs | ✅ | ❌ |
+| Ver dashboards de todas las cuentas | ✅ | ✅ lectura |
+| Leer payloads crudos de webhook | ❌ | ✅ |
+| Reprocesar la bandeja de webhooks | ❌ | ✅ |
+| Disparar sincronizaciones manualmente | ❌ | ✅ |
+| Ver logs y trazas del sistema | ❌ | ✅ |
+| Feature flags | ❌ | ✅ |
+| Correr migraciones | ❌ | ✅ |
+| Impersonar a un usuario | ✅ auditado | ✅ auditado |
+| Ver el log de auditoría de plataforma | ✅ | ✅ |
+| Exportar datos de un tenant | ✅ | ❌ |
+
+**El admin no lee payloads crudos.** Contienen PII sin filtrar de los leads del cliente, y
+para operar comercialmente no hacen falta. **El dev no toca facturación ni estrategia**: son
+decisiones de negocio.
+
+Quien necesite ambas cosas lleva `admin_dev` explícitamente, y esa combinación es la que más
+se audita.
+
+### Gestión de tenants (`admin`)
+
+| Acción | Efecto | Reversible |
+|---|---|---|
+| Crear cuenta | Provisiona tenant, pipeline por tipo de funnel, perfil de Hermes, token de servicio | — |
+| Editar cuenta | Nombre, slug, timezone, moneda, tipo de funnel, branding | ✅ |
+| Suspender | La cuenta queda en solo lectura. Los datos se conservan, los jobs se pausan | ✅ |
+| Archivar | Borrado lógico. Invisible para todos menos plataforma | ✅ 90 días |
+| Eliminar | Borrado físico. **Operación offline, con backup previo verificado y doble confirmación** | ❌ |
+
+Cambiar el `slug` de una cuenta rompe todas las URLs guardadas de sus usuarios. Se permite,
+pero deja un redirect permanente y avisa antes.
+
+### Impersonación
+
+Es la funcionalidad más peligrosa del sistema y necesita reglas explícitas.
+
+```
+1. El actor pide impersonar y DEBE escribir un motivo
+2. Se emite un token de sesión de impersonación, expira en 30 minutos
+3. La UI muestra una franja fija arriba:
+   ⚠ Estás viendo como <usuario> en <cuenta> · Salir
+4. Toda escritura queda registrada con actor real Y usuario impersonado
+5. Al owner de la cuenta se le notifica por email dentro de las 24 h
+```
+
+- La impersonación es **de solo lectura por defecto**. Escribir requiere activarlo
+  explícitamente dentro de la sesión, y eso se registra aparte.
+- Nunca se puede impersonar a otro actor de plataforma.
+- Una sesión de impersonación no puede iniciar otra.
+
+La notificación al owner no es cortesía: es lo que hace que el acceso sea auditable *por el
+cliente*, no solo por nosotros. Un sistema donde el proveedor puede entrar a los datos sin
+que el dueño se entere es un problema de confianza, no de permisos.
+
+---
+
+## Roles de cuenta
+
+Siete roles dentro de cada tenant, independientes de los roles de plataforma de arriba.
+El brief listaba cinco; se agregan `owner` y `viewer` porque "quién puede borrar
 la cuenta" y "stakeholder de solo lectura" son casos reales que los cinco no cubrían.
 
 | Rol | Quién | Resumen |
@@ -65,7 +144,7 @@ la cuenta" y "stakeholder de solo lectura" son casos reales que los cinco no cub
 | `closer` | Cerrador de ventas | Sus propias llamadas y deals |
 | `viewer` | Inversionista, socio | Dashboards de solo lectura, sin PII |
 
-## Matriz de permisos
+## Matriz de permisos de cuenta
 
 `—` sin acceso · `R` leer · `W` crear/actualizar · `D` borrar · `prop` solo registros propios
 
@@ -132,7 +211,8 @@ sin permiso declarado. Los chequeos faltantes los encuentra CI, no un incidente.
 ## Autenticación
 
 - **Access token:** JWT, 15 minutos, `HS256` con secreto rotativo. Claims: `sub`, `email`,
-  `is_platform_admin`, `memberships` (account id → rol), `exp`, `jti`.
+  `platform_role`, `memberships` (account id → rol), `exp`, `jti`, y `act` (actor real)
+  cuando la sesión es de impersonación.
 - **Refresh token:** valor opaco aleatorio de 256 bits, hasheado con SHA-256 antes de
   guardarse, expira a 30 días, **rota en cada uso**.
 - **Detección de reuso:** presentar un refresh token ya rotado revoca toda la cadena y obliga a
@@ -143,9 +223,10 @@ sin permiso declarado. Los chequeos faltantes los encuentra CI, no un incidente.
 - **Contraseña:** bcrypt costo 12. Mínimo 12 caracteres, verificada contra una lista de
   contraseñas comprometidas. Sin reglas de composición (producen `Password1!` y nada más).
 - **Invitaciones:** token firmado de un solo uso, expira en 7 días, enviado por Resend.
-- **MFA:** TOTP, opcional en la Fase 1, **obligatorio para `owner`, `manager` y admins de
-  plataforma antes de que entre el primer cliente real.** Esas cuentas pueden leer la PII de
-  todos los contactos y cada peso de ingreso.
+- **MFA:** TOTP. **Obligatorio sin excepción para `platform_role` distinto de `none`** —
+  esas cuentas pueden leer la PII de *todos* los tenants. Para `owner` y `manager` de cuenta
+  es obligatorio antes de que entre el primer cliente real; opcional para el resto en Fase 1.
+  Un actor de plataforma sin MFA no puede impersonar.
 
 ## Autenticación de servicios (Hermes y workers)
 
