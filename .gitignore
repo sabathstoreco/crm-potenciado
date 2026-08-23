@@ -1,0 +1,31 @@
+# Entorno y secretos
+.env
+.env.*
+!.env.example
+.envrc
+*.pem
+*.key
+
+# Dependencias
+node_modules/
+vendor/
+
+# Build
+dist/
+build/
+.next/
+out/
+*.exe
+bin/
+
+# Go
+*.test
+coverage.out
+
+# Editor / SO
+.DS_Store
+.idea/
+*.swp
+
+# Herramientas locales
+.atl/
