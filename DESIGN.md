@@ -769,16 +769,131 @@ descubrirlo después y pedir cambios.
 
 ---
 
-## 14 · Pendientes
+## 14 · Marca
+
+### 14.1 · El concepto
+
+La **Y** ya es un glifo de convergencia: dos entradas, una salida. Es exactamente el
+mecanismo del producto — contenido y lead magnet convergen en un dato trazable que termina en
+venta. Que además sea la inicial de Yamil OS no es decoración, es una coincidencia aprovechable.
+
+La marca es geometría pura. **No depende de ninguna tipografía**, así que no se rompe si una
+fuente no carga ni hay que convertir nada a trazados.
+
+### 14.2 · Construcción
+
+Lienzo `48 × 48`. Tres coordenadas y un grosor. Todo lo demás se deriva.
+
+| Parámetro | Valor |
+|---|---|
+| Brazo izquierdo | `13.5,13 → 24,26` |
+| Brazo derecho | `34.5,13 → 24,26` |
+| Tallo | `24,26 → 24,36` |
+| Grosor de trazo | `6` |
+| Remate y unión | Redondos |
+| Ángulo de brazos | 38.9° de la vertical |
+| Extensión | 27 ancho × 29 alto |
+| Proporción | 1.074 (alto / ancho) |
+
+```svg
+<g stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M13.5 13 L24 26 L34.5 13"/>
+  <path d="M24 26 L24 36"/>
+</g>
+```
+
+**Centrado óptico.** Los márgenes laterales son exactos (10.5 a cada lado); los verticales no
+(10 arriba, 9 abajo). La marca se asienta 0.5 unidades por debajo del centro matemático, a
+propósito: la Y pesa arriba, donde los brazos abren. Centrada con la calculadora se ve alta.
+
+### 14.3 · Escala
+
+| Tamaño | Grosor efectivo | Archivo |
+|---|---:|---|
+| 16px | 2.00px | `favicon.svg` |
+| 20px | 2.50px | `favicon.svg` |
+| 24px | 3.00px | `icon.svg` |
+| 32px | 4.00px | `icon.svg` |
+| 48px+ | 6.00px | `icon.svg` / `mark.svg` |
+
+**Piso: 16px.** Por debajo la unión de la Y se cierra y el glifo se vuelve una mancha.
+
+A 16–20px se usa `favicon.svg`, con trazo 7 en lugar de 5.5 y radio de esquina más cerrado.
+Es escalado óptico: el mismo dibujo reducido se ve anémico.
+
+### 14.4 · Archivos
+
+Todo en [`brand/`](brand/), todo SVG.
+
+| Archivo | Color | Para qué |
+|---|---|---|
+| `mark.svg` | `currentColor` | Hereda el color del contexto. El más flexible. |
+| `mark-red.svg` | `#DB0F2A` | Marca sola sobre lienzo o blanco. |
+| `icon.svg` | Rojo + blanco | Icono de app. La versión por defecto. |
+| `favicon.svg` | Rojo + blanco | Ajustado ópticamente para 16–32px. |
+| `icon-mono.svg` | `currentColor` | Una sola tinta: grabado, impresión, sellos. |
+
+### 14.5 · Wordmark
+
+«YAMIL **OS**» se compone en **Fjalla One** como texto HTML dentro de la aplicación, no como
+imagen: se lee mejor, escala solo y es accesible.
+
+La jerarquía se hace **con color, no con peso** — Fjalla One tiene un solo peso (§4.2):
+
+```
+YAMIL   →  fg          (#F5F3F3 oscuro · #1A1818 claro)
+OS      →  brand-text  (#E86577 oscuro · #DB0F2A claro)
+```
+
+> [!CAUTION]
+> Para PDFs y exports que salen de la aplicación hay que **convertir el texto a trazados**
+> antes de mandarlos. Si no, la fuente no viaja y el archivo se ve con la tipografía
+> equivocada en la máquina del destinatario.
+
+### 14.6 · Área de resguardo
+
+Un cuarto del ancho de la marca por cada lado. Nada entra en ese margen: ni texto, ni borde,
+ni otro logo.
+
+### 14.7 · Uso
+
+**Correcto**
+
+- Icono en squircle sobre cualquier fondo. Es la versión por defecto.
+- Marca en rojo sobre el lienzo `#0A0A0A` o sobre blanco.
+- Marca en blanco o gris sobre superficies elevadas.
+- Wordmark con «OS» en `brand-text`.
+
+**Incorrecto**
+
+| No | Por qué |
+|---|---|
+| Recolorear con el color del cliente | La marca de Yamil OS es siempre roja. La del tenant vive en su propia capa (§13). |
+| Estirar o deformar | Se escala uniforme o no se escala. |
+| Rojo sobre `#2B2929` | Da 2.83:1 — la marca prácticamente desaparece. Va la versión blanca. |
+| Sombras, degradados, contornos | La marca es plana. Siempre. |
+| Por debajo de 16px | La unión de la Y se cierra. |
+
+### 14.8 · Convivencia con la marca del tenant
+
+Dentro de una cuenta, **el cliente manda**: su color es la franja superior, su logo el avatar,
+su nombre el titular. Yamil OS baja al pie, en `fg-muted`, a 14px, con la leyenda
+«Funciona con Yamil OS».
+
+Es una relación de plataforma, no de competencia. Y tiene una función práctica: el usuario
+siempre sabe en qué cuenta está parado, que es el error más caro de una app multi-tenant.
+
+---
+
+## 15 · Pendientes
 
 | # | Pregunta | Necesario para | Estado |
 |---|---|---|---|
-| D1 | ¿Existe logotipo de Yamil OS, o hay que diseñarlo? | Header, favicon, login | **Abierto** |
+| ~~D1~~ | ~~¿Existe logotipo de Yamil OS?~~ | Header, favicon, login | ✅ **Resuelto** — diseñado, ver §14 y [`brand/`](brand/) |
 | D2 | ¿Marca blanca por cliente o marca única? | Arquitectura de tokens | ✅ **Resuelto** — ver §13: Yamil OS es el chrome, el tenant aporta logo y color como capa superpuesta |
 | D3 | ¿Densidad "cómoda" además de la compacta, como toggle? | Escala de espaciado | **Abierto** |
-| D4 | ¿Identidad de marca previa de Yamil OS a respetar? | Consistencia | **Abierto** |
+| ~~D4~~ | ~~¿Identidad de marca previa a respetar?~~ | Consistencia | ✅ **Resuelto** — no había; se diseñó desde cero |
 | D5 | ¿El cliente puede elegir el modo claro como su default, o lo fuerza Yamil OS a oscuro? | Preferencia de usuario vs de cuenta | **Abierto** |
 
-**D1 pasa a ser el más urgente.** El sistema de diseño está definido, pero el chrome necesita
-una marca visual concreta —logotipo, monograma, favicon— y hoy no existe. Sin eso, el header
-y la pantalla de login no se pueden terminar.
+**D3 y D5 son los que quedan sobre la mesa** y ninguno bloquea la Fase 0. D4 se cierra solo:
+no había identidad previa, la marca se diseñó desde cero contra este sistema.
